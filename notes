@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+NOTES_DIR=~/.notes/
+
+stat $NOTES_DIR > /dev/null
+if [ "$?" != "0" ]; then
+  mkdir ~/.notes/ 
+fi
+
+
+save ()
+{
+  cd $NOTES_DIR && git add ./
+
+  if [ "$?" != "0" ]; then
+    echo "Could not add notes to commit"
+    exit 1
+  fi
+
+  cd $NOTES_DIR && git commit -m "updated notes @ $(date)"
+
+  if [ "$?" != "0" ]; then
+    echo "Could not commit the notes"
+    exit 1
+  fi
+
+  cd $NOTES_DIR && git push origin main
+
+  if [ "$?" != "0" ]; then
+    echo "Could not commit the notes"
+    exit 1
+  fi
+
+  cd -
+}
+
+load ()
+{
+
+  cd $NOTES_DIR && git pull origin main
+
+  if [ "$?" != "0" ]; then
+    echo "Could not load latest notes"
+    exit 1
+  fi
+}
+
+TODAYS_NOTE="$NOTES_DIR"$(date +"%F").md
+YESTERDAYS_NOTE="$NOTES_DIR"$(date --date="now-1-day" +"%F").md
+
+SELECTED_NOTE=""
+
+if [ "$1" = "today" ] || [ "$1" = "t" ]; then
+  load
+  echo "Opening today's notes"
+  SELECTED_NOTE=$TODAYS_NOTE
+fi
+
+if [ "$1" = "yesterday" ] || [ "$1" = "y" ]; then
+  load
+  echo "Opening yesterday's notes"
+  SELECTED_NOTE=$YESTERDAYS_NOTE
+fi
+
+if [ "$1" = "back" ] || [ "$1" = "b" ]; then
+
+  if [ "$2" = "" ]; then
+    echo "notes back <number of days>"
+    exit 1
+  fi
+
+  load
+  SELECTED_NOTE="$NOTES_DIR"$(date --date="now-$2-day" +"%F").md
+fi
+
+
+
+if [ "$SELECTED_NOTE" != "" ]; then
+
+  echo $SELECTED_NOTE
+  $EDITOR $SELECTED_NOTE
+  save
+fi
+
