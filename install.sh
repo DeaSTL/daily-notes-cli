@@ -38,22 +38,12 @@ prompt_git() {
 }
 
 # === MAIN ===
-# if [ -d "$NOTES_CLI_DIR" ]; then
-#   echo "$NOTES_CLI_DIR already exists, skipping clone (remove to re-download)"
-# else
-#   echo "Cloning repository..."
-#   git clone "$REPO_URL" "$NOTES_CLI_DIR"
-# fi
-# cd "$NOTES_CLI_DIR"
-
 echo "Installing notes command"
 mkdir -p "$INSTALL_PATH"
 (git clone "$REPO_URL" /tmp/notes && cd /tmp/notes/ && cp ./notes  "$INSTALL_PATH/$NOTES_COMMAND" && rm -rf /tmp/notes/)
 chmod +x "$INSTALL_PATH/$NOTES_COMMAND"
 
 prompt_git
-
-# cp ./notes "$INSTALL_PATH/$NOTES_COMMAND"
 
 prompt_notes_dir
 
