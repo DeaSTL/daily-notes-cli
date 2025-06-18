@@ -3,6 +3,7 @@
 #### Configuration
 
 NOTES_DIR=~/.notes/
+GIT_BRANCH="main"
 
 ### End Configuration
 
@@ -72,7 +73,7 @@ save ()
     return
   fi
 
-  cd $NOTES_DIR && git push origin main
+  cd $NOTES_DIR && git push origin $GIT_BRANCH
 
   if [ "$?" != "0" ]; then
     echo "Could not commit the notes"
@@ -89,7 +90,7 @@ load ()
     return
   fi
 
-  cd $NOTES_DIR && git pull origin main
+  cd $NOTES_DIR && git pull origin $GIT_BRANCH
 
   if [ "$?" != "0" ]; then
     echo "Could not load latest notes"
