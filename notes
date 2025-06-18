@@ -1,15 +1,59 @@
 #!/usr/bin/env bash
 
+#### Configuration
+
 NOTES_DIR=~/.notes/
 
-stat $NOTES_DIR > /dev/null
-if [ "$?" != "0" ]; then
-  mkdir ~/.notes/ 
-fi
+### End Configuration
+
+GIT_ENABLED=0
+
+GIT_REMOTE_ENABLED=0
+
+
+check_git_status()
+{
+  cd $NOTES_DIR && git status
+
+  if [ "$?" != "0" ]; then
+    echo ""
+    echo "Could not determine git status. Will not be using git version control"
+    echo "It's recommended that you add a git repo in your notes dir: $NOTES_DIR"
+    echo ""
+  else
+    GIT_ENABLED=1
+  fi
+
+  cd -
+}
+
+check_git_remote_status()
+{
+  if [ "$GIT_ENABLED" = "0" ]; then
+    return
+  fi
+
+  local remote_branch_list="$(cd $NOTES_DIR && git branch -r)"
+
+  if [ "$remote_branch_list" = "" ]; then
+    echo ""
+    echo "Remote origin not found. Not using remote sync"
+    echo "It's recommended that you setup a remote origin in your notes dir: $NOTES_DIR"
+    echo ""
+  else
+    GIT_REMOTE_ENABLED=1
+  fi
+
+}
 
 
 save ()
 {
+
+  if [ "$GIT_ENABLED" = "0" ]; then
+    return
+  fi
+
   cd $NOTES_DIR && git add ./
 
   if [ "$?" != "0" ]; then
@@ -22,6 +66,10 @@ save ()
   if [ "$?" != "0" ]; then
     echo "Could not commit the notes"
     exit 1
+  fi
+  
+  if [ "$GIT_REMOTE_ENABLED" = "0" ]; then
+    return
   fi
 
   cd $NOTES_DIR && git push origin main
@@ -36,6 +84,10 @@ save ()
 
 load ()
 {
+  
+  if [ "$GIT_REMOTE_ENABLED" = "0" ]; then
+    return
+  fi
 
   cd $NOTES_DIR && git pull origin main
 
@@ -45,10 +97,58 @@ load ()
   fi
 }
 
-TODAYS_NOTE="$NOTES_DIR"$(date +"%F").md
-YESTERDAYS_NOTE="$NOTES_DIR"$(date --date="now-1-day" +"%F").md
+date_str ()
+{
+  local days_back=$1
+  local os=$(uname)
+
+
+  if [ "$os" = "Darwin" ]; then
+    echo $(date -v "-${days_back}d" +"%F")
+  else
+    echo $(date --date="now-${days_back}-day" +"%F")
+  fi
+}
+
+help_me ()
+{
+  echo "notes h|help - opens help menu"
+  echo "notes t|today - opens the notes for today"
+  echo "notes b|back <number of days> - opens the notes from x number of days ago"
+  echo "notes y|yesterday - opens the notes from yesterday"
+}
+
+## lil bit of validation
+which git
+if [ "$?" != "0" ]; then
+  echo "Please install git to use this program"
+  exit 1
+fi
+
+stat $NOTES_DIR > /dev/null
+if [ "$?" != "0" ]; then
+  mkdir $NOTES_DIR
+fi
+
+
+if [ "$EDITOR" = "" ]; then
+  echo "Please define your EDITOR environment variable in your ~/.bashrc or ~/.zshrc"
+  exit 1
+fi
+
+check_git_status
+check_git_remote_status
+
+
+TODAYS_NOTE="$NOTES_DIR"$(date_str 0).md
+YESTERDAYS_NOTE="$NOTES_DIR"$(date_str 1).md
 
 SELECTED_NOTE=""
+
+if [ "$1" = "help" ] || [ "$1" = "h" ]; then
+  help_me
+  exit 1
+fi
 
 if [ "$1" = "today" ] || [ "$1" = "t" ]; then
   load
@@ -70,7 +170,7 @@ if [ "$1" = "back" ] || [ "$1" = "b" ]; then
   fi
 
   load
-  SELECTED_NOTE="$NOTES_DIR"$(date --date="now-$2-day" +"%F").md
+  SELECTED_NOTE="$NOTES_DIR"$(date_str $2).md
 fi
 
 
