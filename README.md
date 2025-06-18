@@ -17,16 +17,20 @@ I wanted a simple way keep track of notes without all the bloat. I use this on a
 
 ### After install setup
 
-
 **Default notes location is ~/.notes**
+
 **Default git branch is main**
+
 This is configurable
 
 `$ mkdir ~/.notes`
+
 `$ cd ~/.notes/ && git init`
+
 `$ git remote add origin <your github repo>`
 
 **Just to make sure everything is up to date**
+
 `$ git pull origin main`
 
 
