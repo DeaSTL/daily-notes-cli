@@ -2,6 +2,10 @@
 Simple cli for quickly creating daily markdown notes and retrieving past notes
 
 
+## Why?
+
+I wanted a simple way keep track of notes without all the bloat. I use this on a daily basis
+
 ## Setup
 
 
